@@ -7,10 +7,14 @@ Metadata Booster is a standalone ComfyUI frontend extension that adds quick meta
 ## Features
 
 - `PNG Info` right-click actions for node previews and Assets/media previews
+- ![Sidebar](./public/sidebar.png)
 - metadata browser sidebar for dropped local files, folders, and live generated workflow previews
 - grouped metadata dialog for Comfy prompt/workflow metadata
 - `Copy metadata to clipboard` as formatted JSON
+![Copy Workflow](./public/copy-workflow.png)
 - `Open workflow in ComfyUI` for embedded workflow JSON
+
+![Hover Preview](./public/hover.png)
 - optional lightweight Assets/media hover preview with configurable fields
 - embedded video metadata support for MP4/MOV/M4V and WebM/MKV files when metadata is present in the container
 
