@@ -1,0 +1,27 @@
+[project]
+name = "comfyui-metadata-booster"
+description = "ComfyUI frontend extension for inspecting embedded metadata in previewed images and videos."
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = []
+license = { file = "LICENSE" }
+classifiers = [
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/rafek1241/comfyui-metadata-booster"
+Documentation = "https://github.com/rafek1241/comfyui-metadata-booster#readme"
+Repository = "https://github.com/rafek1241/comfyui-metadata-booster"
+Issues = "https://github.com/rafek1241/comfyui-metadata-booster/issues"
+
+[tool.comfy]
+# Set this to your Comfy Registry publisher id before publishing.
+PublisherId = "rafek1241"
+DisplayName = "Metadata Booster"
+Icon = ""
+includes = []
+web = "./web"
+
+# Uncomment when you want to constrain ComfyUI compatibility.
+# requires-comfyui = ">=1.0.0"

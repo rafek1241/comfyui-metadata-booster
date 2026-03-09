@@ -1,0 +1,17 @@
+.github/
+.idea/
+.vscode/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv/
+env/
+venv/
+node_modules/
+build/
+dist/
+node.zip
+*.pyc
+*.pyo
+*.pyd
+*.code-workspace
