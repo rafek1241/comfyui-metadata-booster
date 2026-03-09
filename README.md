@@ -11,6 +11,7 @@ Metadata Booster is a standalone ComfyUI frontend extension that adds quick meta
 - metadata browser sidebar for dropped local files, folders, and live generated workflow previews
 - grouped metadata dialog for Comfy prompt/workflow metadata
 - `Copy metadata to clipboard` as formatted JSON
+![Dialog](./public/dialog.png)
 ![Copy Workflow](./public/copy-workflow.png)
 - `Open workflow in ComfyUI` for embedded workflow JSON
 
