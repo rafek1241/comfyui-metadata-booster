@@ -91,13 +91,100 @@ function safeJsonParse(value) {
     }
 }
 
+function looksLikeComfyPromptGraph(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+
+    return Object.values(value).some(
+        (node) =>
+            node &&
+            typeof node === "object" &&
+            !Array.isArray(node) &&
+            (typeof node.class_type === "string" ||
+                typeof node._meta?.title === "string" ||
+                (node.inputs && typeof node.inputs === "object")),
+    );
+}
+
+function looksLikeComfyWorkflow(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return false;
+    }
+
+    return (
+        Array.isArray(value.nodes) ||
+        Array.isArray(value.links) ||
+        value.last_node_id !== undefined ||
+        value.last_link_id !== undefined
+    );
+}
+
+function normalizeMetadataValue(value) {
+    const parsed = safeJsonParse(value);
+    if (!parsed || typeof parsed !== "object") {
+        return parsed;
+    }
+
+    if (Array.isArray(parsed)) {
+        return parsed.map((item) => normalizeMetadataValue(item));
+    }
+
+    return Object.fromEntries(
+        Object.entries(parsed).map(([key, item]) => [key, normalizeMetadataValue(item)]),
+    );
+}
+
+function findNestedComfyMetadata(value, collected = {}) {
+    if (!value || typeof value !== "object") {
+        return collected;
+    }
+
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            findNestedComfyMetadata(item, collected);
+            if (collected.prompt && collected.workflow) {
+                return collected;
+            }
+        }
+        return collected;
+    }
+
+    for (const [key, child] of Object.entries(value)) {
+        const normalizedKey = String(key).toLowerCase();
+        if (!collected.prompt && normalizedKey === "prompt" && looksLikeComfyPromptGraph(child)) {
+            collected.prompt = child;
+        }
+        if (!collected.workflow && normalizedKey === "workflow" && looksLikeComfyWorkflow(child)) {
+            collected.workflow = child;
+        }
+
+        if (child && typeof child === "object") {
+            findNestedComfyMetadata(child, collected);
+        }
+
+        if (collected.prompt && collected.workflow) {
+            return collected;
+        }
+    }
+
+    return collected;
+}
+
 function normalizeRawMetadata(rawMetadata) {
     const normalized = {};
     for (const [key, value] of Object.entries(rawMetadata ?? {})) {
-        normalized[key] = Array.isArray(value)
-            ? value.map((item) => safeJsonParse(item))
-            : safeJsonParse(value);
+        normalized[key] = normalizeMetadataValue(value);
     }
+
+    const embeddedComfyMetadata = findNestedComfyMetadata(normalized);
+    if (embeddedComfyMetadata.prompt && !looksLikeComfyPromptGraph(normalized.prompt)) {
+        normalized.prompt = embeddedComfyMetadata.prompt;
+    }
+    if (embeddedComfyMetadata.workflow && !looksLikeComfyWorkflow(normalized.workflow)) {
+        normalized.workflow = embeddedComfyMetadata.workflow;
+    }
+
     return normalized;
 }
 
@@ -161,6 +248,25 @@ function truncatePreviewText(value, limit = 180) {
         return "";
     }
     return text.length > limit ? `${text.slice(0, limit - 1)}...` : text;
+}
+
+function previewValueFromMetadata(value) {
+    if (value === undefined || value === null || value === "") {
+        return null;
+    }
+
+    if (Array.isArray(value)) {
+        const scalarItems = value.filter(
+            (item) => typeof item === "string" || typeof item === "number" || typeof item === "boolean",
+        );
+        return scalarItems.length === value.length ? scalarItems.join(", ") : null;
+    }
+
+    if (typeof value === "object") {
+        return null;
+    }
+
+    return value;
 }
 
 function formatDuration(seconds) {
@@ -603,7 +709,10 @@ function buildNormalizedMetadata(source, formatInfo, intrinsicDetails, rawMetada
 
     for (const [key, value] of Object.entries(normalizedRawMetadata)) {
         addEntry(sectionState, rawSectionForKey(key), formatKeyLabel(key), value);
-        setPreviewValue(preview, previewKeyFromLabel(key), Array.isArray(value) ? value.join(", ") : value);
+        const previewValue = previewValueFromMetadata(value);
+        if (previewValue !== null) {
+            setPreviewValue(preview, previewKeyFromLabel(key), previewValue);
+        }
 
         if (key === "prompt" && value && typeof value === "object" && !Array.isArray(value)) {
             deriveFromPromptGraph(value, sectionState, preview);
@@ -675,18 +784,10 @@ export function extractWorkflowFromMetadata(metadata) {
         return null;
     }
 
-    for (const [key, value] of Object.entries(rawMetadata)) {
-        if (
-            String(key).toLowerCase() === "workflow" &&
-            value &&
-            typeof value === "object" &&
-            !Array.isArray(value)
-        ) {
-            return value;
-        }
-    }
-
-    return null;
+    const normalizedRawMetadata = normalizeRawMetadata(rawMetadata);
+    return looksLikeComfyWorkflow(normalizedRawMetadata.workflow)
+        ? normalizedRawMetadata.workflow
+        : null;
 }
 
 async function inspectSourceInternal(source) {

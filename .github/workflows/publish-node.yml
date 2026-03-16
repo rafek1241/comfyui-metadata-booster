@@ -13,7 +13,7 @@ jobs:
     name: Publish custom node
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write  # Updated to allow tagging
 
     steps:
       - name: Check out code
@@ -53,3 +53,13 @@ jobs:
         uses: Comfy-Org/publish-node-action@main
         with:
           personal_access_token: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
+
+      - name: Create and push git tag
+        if: ${{ steps.config.outputs.publisher_id != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.config.outputs.version }}" -m "v${{ steps.config.outputs.version }}"
+          git push origin "v${{ steps.config.outputs.version }}"
