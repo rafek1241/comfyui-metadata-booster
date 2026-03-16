@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-metadata-booster"
 description = "ComfyUI frontend extension for inspecting embedded metadata in previewed images and videos."
-version = "0.1.0"
+version = "0.1.1"
 requires-python = ">=3.9"
 dependencies = []
 license = { file = "LICENSE" }
