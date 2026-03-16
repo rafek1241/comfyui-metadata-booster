@@ -109,7 +109,7 @@ export class MetadataBoosterDialog extends ComfyDialog {
             const workflowButton = createElement(
                 "button",
                 "metadata-booster-button",
-                "Open workflow in ...",
+                "Open workflow in ComfyUI",
             );
             workflowButton.type = "button";
             workflowButton.onclick = async () => {
